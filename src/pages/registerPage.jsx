@@ -1,9 +1,10 @@
+
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import Loader from "../components/loader";
-// MdOutlineSensors, MdNotificationsActive, MdOutlineWatch යන icons ඉවත් කරන්න, ඒවා තවදුරටත් භාවිතා නොවේ
+// Remove MdOutlineSensors, MdNotificationsActive, MdOutlineWatch icons — they are no longer used
 import { MdEmail, MdLockOutline, MdSecurity, MdPersonOutline, MdPhoneIphone } from "react-icons/md";
 
 export default function RegisterPage() {
@@ -114,7 +115,7 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* Right Side: Form (මෙහි කිසිදු වෙනසක් සිදු කර නැත) */}
+        {/* Right Side: Form (no changes were made here) */}
         <div className="w-full md:w-1/2 p-10 md:p-12 flex flex-col justify-center">
           
           <div className="mb-8 text-center md:text-left">

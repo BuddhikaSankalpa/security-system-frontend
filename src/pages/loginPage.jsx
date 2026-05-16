@@ -3,7 +3,7 @@ import { useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import Loader from "../components/loader";
-// අලුත් icons ටික
+// New icons
 import { MdEmail, MdLockOutline, MdSecurity } from "react-icons/md";
 
 export default function LoginPage() {
@@ -33,7 +33,7 @@ export default function LoginPage() {
           localStorage.setItem("role", response.data.role);
 
           toast.success("Authentication Verified!");
-          navigate("/"); 
+          navigate("/admin"); 
 
         } else {
           toast.error("Access Denied: Administrative privileges required.");
