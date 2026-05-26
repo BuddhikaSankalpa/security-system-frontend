@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-import { FaUserShield, FaUserPlus, FaTimes } from "react-icons/fa";
+import { FaUserShield, FaUserPlus, FaTimes, FaLock } from "react-icons/fa";
 import { MdOutlineLocalPhone } from "react-icons/md";
 import Loader from "../../components/loader"; 
 
@@ -13,6 +13,11 @@ export default function AdminSecurityPersonnel() {
   // States needed for the edit modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+
+  // Security Verification States
+  const [isVerified, setIsVerified] = useState(false);
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
 
   // Retrieve all users from the backend
   async function fetchUsers() {
@@ -31,7 +36,18 @@ export default function AdminSecurityPersonnel() {
     fetchUsers();
   }, []);
 
-  // 🔴 Remove (delete) a user
+  // Security Login Handler
+  function handleAuthSubmit(e) {
+    e.preventDefault();
+    if (authEmail === 'admin@gmail.com' && authPassword === '123') {
+      toast.success("Access Granted");
+      setIsVerified(true);
+    } else {
+      toast.error("Access Denied: Invalid credentials.");
+    }
+  }
+
+  // Remove (delete) a user
   async function handleRemoveUser(id) {
     if (window.confirm("Are you sure you want to remove this operator/admin?")) {
       try {
@@ -48,13 +64,13 @@ export default function AdminSecurityPersonnel() {
     }
   }
 
-  // 🟡 Function to open the edit modal
+  // Function to open the edit modal
   function openEditModal(user) {
     setSelectedUser({ ...user });
     setIsEditModalOpen(true);
   }
 
-  // 🟡 Save the modified data to the backend
+  // Save the modified data to the backend
   async function handleUpdateUser(e) {
     e.preventDefault();
     try {
@@ -68,6 +84,48 @@ export default function AdminSecurityPersonnel() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  // Security Login Screen UI
+  if (!isVerified) {
+    return (
+      <div className="p-8 w-full min-h-screen bg-[#090D14] text-slate-300 flex items-center justify-center relative overflow-hidden font-sans">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:40px_40px] opacity-20 pointer-events-none"></div>
+
+        <div className="bg-[#111826] border border-slate-800 rounded-2xl w-full max-w-md p-8 shadow-2xl relative z-10 text-center">
+          <div className="w-16 h-16 bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-5 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
+            <FaLock size={24} />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Security Clearance Required</h2>
+          <p className="text-slate-400 text-sm mb-6">Please enter Head Security Officer credentials to unlock Personnel Profiles.</p>
+
+          <form onSubmit={handleAuthSubmit} className="space-y-4">
+            <input
+              type="email"
+              placeholder="Email Address"
+              value={authEmail}
+              onChange={(e) => setAuthEmail(e.target.value)}
+              className="w-full px-4 py-3 bg-[#090D14] text-white rounded-xl border border-slate-700 outline-none focus:border-blue-500 transition text-sm"
+              required
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={authPassword}
+              onChange={(e) => setAuthPassword(e.target.value)}
+              className="w-full px-4 py-3 bg-[#090D14] text-white rounded-xl border border-slate-700 outline-none focus:border-blue-500 transition text-sm"
+              required
+            />
+            <button
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3 px-6 rounded-xl transition duration-300 shadow-md uppercase text-xs tracking-wider"
+            >
+              Verify Credentials
+            </button>
+          </form>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -84,10 +142,6 @@ export default function AdminSecurityPersonnel() {
             <p className="text-slate-400 mt-1">Manage system admin access and all registered personnel profiles.</p>
           </div>
           
-          {/* <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold hover:from-blue-500 hover:to-indigo-500 transition duration-300 shadow-[0_4px_15px_rgba(59,130,246,0.3)] hover:shadow-[0_4px_25px_rgba(59,130,246,0.5)] flex items-center gap-2 tracking-wide">
-            <FaUserPlus /> REGISTER PERSONNEL
-          </button> */}
-          
           <Link 
               to="/register" 
               className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold hover:from-blue-500 hover:to-indigo-500 transition duration-300 shadow-[0_4px_15px_rgba(59,130,246,0.3)] hover:shadow-[0_4px_25px_rgba(59,130,246,0.5)] flex items-center gap-2 tracking-wide"
@@ -96,8 +150,6 @@ export default function AdminSecurityPersonnel() {
               <span>REGISTER PERSONNEL</span>
             </Link>
         </div>
-
-            
 
         <div className="bg-[#111826] rounded-xl shadow-lg border border-slate-800 overflow-hidden">
           
@@ -136,9 +188,18 @@ export default function AdminSecurityPersonnel() {
                           <MdOutlineLocalPhone className="text-slate-500" /> {person.phone}
                         </div>
                       </td>
-                      <td className="p-5 font-bold text-indigo-400">
+                      
+                      {/* CHANGED: Dynamic color rendering based on role */}
+                      <td className={`p-5 font-bold tracking-wide ${
+                        person.role === "Main Security Officer" 
+                          ? "text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" 
+                          : person.role === "Security Officer" 
+                          ? "text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" 
+                          : "text-indigo-400"
+                      }`}>
                         {person.role || (person.isAdmin ? "System Admin" : "User")}
                       </td>
+
                       <td className="p-5">
                         <span className={`px-3 py-1.5 rounded-md text-xs font-bold tracking-wide border ${
                           !person.isBlocked 
@@ -171,7 +232,7 @@ export default function AdminSecurityPersonnel() {
         </div>
       </div>
 
-      {/* 🟢 EDIT MODAL POPUP (Styled to match page theme) */}
+      {/* EDIT MODAL POPUP */}
       {isEditModalOpen && selectedUser && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-[#111826] border border-slate-700/60 rounded-2xl w-full max-w-lg p-6 relative shadow-2xl animate-fade-in">
@@ -240,6 +301,7 @@ export default function AdminSecurityPersonnel() {
                     onChange={(e) => setSelectedUser({...selectedUser, role: e.target.value})}
                     className="w-full mt-1 px-3 py-2 bg-slate-800 border border-slate-700 text-white rounded-lg outline-none focus:border-blue-500"
                   >
+                    <option value="Main Security Officer">Main Security Officer</option>
                     <option value="Security Officer">Security Officer</option>
                     <option value="Field Operator">Field Operator</option>
                     <option value="System Admin">System Admin</option>

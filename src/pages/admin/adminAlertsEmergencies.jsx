@@ -8,10 +8,7 @@ import { MdOutlineEmergencyShare } from "react-icons/md";
 import { TbHandClick } from "react-icons/tb";
 import Loader from "../../components/loader";
 
-// 1. Get the backend URL from .env
 const envUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api";
-
-// 2. Remove any trailing '/api' from the URL when creating the socket connection
 const socketUrl = envUrl.replace(/\/api\/?$/, ''); 
 const socket = io(socketUrl, { transports: ['websocket'] });
 
@@ -20,12 +17,11 @@ export default function AdminAlertsEmergencies() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load previous alerts from the database
     fetchAlerts();
 
-    // Listen for new incoming alerts
+    // Listen for new incoming alerts and keep only the latest 20
     socket.on('new-emergency', (alertData) => {
-      setAlerts((prev) => [alertData, ...prev]);
+      setAlerts((prev) => [alertData, ...prev].slice(0, 20));
     });
 
     return () => socket.off('new-emergency');
@@ -33,9 +29,9 @@ export default function AdminAlertsEmergencies() {
 
   const fetchAlerts = async () => {
     try {
-      // 3. Use the envUrl directly
       const response = await axios.get(`${envUrl}/alerts`);
-      setAlerts(response.data);
+      // Keep only the first 20 alerts for the UI
+      setAlerts(response.data.slice(0, 20));
     } catch (err) {
       console.log(err);
       toast.error("Failed to load alerts.");
@@ -46,7 +42,6 @@ export default function AdminAlertsEmergencies() {
 
   const resolveAlert = async (id) => {
     try {
-      // 3. Use the envUrl directly
       await axios.put(`${envUrl}/alerts/${id}/resolve`);
       
       setAlerts((prev) => prev.map(alert => 
@@ -60,18 +55,37 @@ export default function AdminAlertsEmergencies() {
     }
   };
 
+  const resolveAllAlerts = async () => {
+    const pendingAlerts = alerts.filter(alert => alert.status !== 'Resolved');
+    if (pendingAlerts.length === 0) return;
+
+    try {
+      await Promise.all(
+        pendingAlerts.map(alert => axios.put(`${envUrl}/alerts/${alert._id}/resolve`))
+      );
+
+      setAlerts((prev) => prev.map(alert => ({ ...alert, status: 'Resolved' })));
+      toast.success("All Alerts Marked as Resolved!");
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to resolve all alerts.");
+    }
+  };
+
   const getAlertIcon = (type) => {
     if (type?.includes("Fire")) return <FaFireExtinguisher size={24} className="text-red-500" />;
     if (type?.includes("Employee") || type?.includes("Man Down")) return <MdOutlineEmergencyShare size={24} className="text-orange-500" />;
     return <TbHandClick size={24} className="text-red-400" />; 
   };
 
+  const hasPendingAlerts = alerts.some(alert => alert.status !== 'Resolved');
+
   return (
     <div className="p-8 w-full min-h-screen bg-[#090D14] text-slate-300 relative overflow-hidden font-sans">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:40px_40px] opacity-20 pointer-events-none"></div>
 
       <div className="relative z-10">
-        <div className="mb-8 flex justify-between items-end">
+        <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
               <IoAlertCircle className="text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]" /> 
@@ -79,9 +93,17 @@ export default function AdminAlertsEmergencies() {
             </h1>
             <p className="text-slate-400 mt-1">Review and manage all critical security and environmental alerts.</p>
           </div>
+          
+          {hasPendingAlerts && (
+            <button 
+              onClick={resolveAllAlerts}
+              className="px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-lg font-bold tracking-wide uppercase transition-all shadow-[0_0_15px_rgba(34,197,94,0.3)] flex items-center justify-center gap-2"
+            >
+              <IoCheckmarkCircle size={20} /> Mark as Resolved All
+            </button>
+          )}
         </div>
 
-        {/* ── Alerts List ── */}
         <div className="space-y-4">
           {isLoading ? (
             <div className="flex justify-center py-20"><Loader /></div>
@@ -103,14 +125,12 @@ export default function AdminAlertsEmergencies() {
                   }`}
                 >
                   <div className="flex items-center gap-5">
-                    {/* Icon Box */}
                     <div className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 border ${
                       isResolved ? 'bg-slate-800 border-slate-700' : 'bg-red-500/20 border-red-500/50'
                     }`}>
                       {isResolved ? <IoCheckmarkCircle size={28} className="text-green-500" /> : getAlertIcon(alert.type)}
                     </div>
 
-                    {/* Alert Details */}
                     <div>
                       <div className="flex items-center gap-3">
                         <h3 className={`text-lg font-black uppercase tracking-wide ${isResolved ? 'text-slate-300' : 'text-red-400'}`}>
@@ -128,7 +148,6 @@ export default function AdminAlertsEmergencies() {
                         <p>⏱️ Time: {new Date(alert.createdAt || Date.now()).toLocaleString()}</p>
                       </div>
                       
-                      {/* Description / Extra Data */}
                       {alert.description && (
                          <p className="text-xs text-slate-500 mt-2 bg-slate-900/50 inline-block px-3 py-1 rounded">
                            Details: {alert.description}
@@ -137,7 +156,6 @@ export default function AdminAlertsEmergencies() {
                     </div>
                   </div>
 
-                  {/* Action Button */}
                   {!isResolved && (
                     <button 
                       onClick={() => resolveAlert(alert._id)}
@@ -151,7 +169,6 @@ export default function AdminAlertsEmergencies() {
             })
           )}
         </div>
-
       </div>
     </div>
   );

@@ -1,9 +1,9 @@
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import axios from 'axios';
 
-import { MdDashboard, MdSensors, MdOutlineSecurity } from "react-icons/md";
+import { MdDashboard, MdSensors, MdOutlineSecurity, MdLogout } from "react-icons/md";
 import { FaMapMarkedAlt, FaUsers } from "react-icons/fa";
 import { IoAlertCircle, IoDocumentText, IoSettingsSharp } from "react-icons/io5";
 
@@ -19,18 +19,20 @@ const envUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api";
 const socketUrl = envUrl.replace(/\/api\/?$/, '');
 
 export default function Admin() {
+  const navigate = useNavigate();
+
   const [pendingAlerts, setPendingAlerts] = useState([]);
   
-  // Check localStorage to see whether it was muted before
+  // CHANGED: New state for the logout confirmation modal
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  
   const [isMuted, setIsMuted] = useState(localStorage.getItem('systemMuted') === 'true');
   const audioRef = useRef(null);
 
   useEffect(() => {
-    // Initialize system-wide audio here
     audioRef.current = new Audio('/siren.mp3');
     audioRef.current.loop = true;
 
-    // Load pending alerts from the database
     const fetchAlerts = async () => {
       try {
         const res = await axios.get(`${envUrl}/alerts`);
@@ -41,17 +43,14 @@ export default function Admin() {
 
     const socket = io(socketUrl, { transports: ['websocket'] });
     
-    // Add new alerts to the list as they arrive
     socket.on('new-emergency', (alert) => {
       setPendingAlerts(prev => [alert, ...prev]);
     });
     
-    // Remove alerts from the list when resolved
     socket.on('alert-resolved', (id) => {
       setPendingAlerts(prev => prev.filter(a => a._id !== id));
     });
 
-    // Listen for mute toggle events from the dashboard
     const handleMuteToggle = () => {
       setIsMuted(localStorage.getItem('systemMuted') === 'true');
     };
@@ -64,7 +63,6 @@ export default function Admin() {
     };
   }, []);
 
-  // Auto play/pause audio based on active alerts and mute state
   useEffect(() => {
     if (pendingAlerts.length > 0 && !isMuted) {
       if (audioRef.current) audioRef.current.play().catch(e => console.log("Play blocked:", e));
@@ -73,13 +71,25 @@ export default function Admin() {
     }
   }, [pendingAlerts.length, isMuted]);
 
-  // This becomes true as long as there is at least one unresolved alert
+  // --- CHANGED: Triggers the modal instead of logging out immediately ---
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  // --- CHANGED: The actual logout logic ---
+  const executeLogout = () => {
+    localStorage.removeItem('token'); 
+    localStorage.removeItem('user'); 
+    setShowLogoutConfirm(false);
+    navigate('/login'); 
+  };
+
   const hasActiveAlerts = pendingAlerts.length > 0;
 
   return (
-    <div className="w-screen h-screen flex overflow-hidden">
+    <div className="w-screen h-screen flex overflow-hidden relative">
       {/* ── Sidebar ── */}
-      <div className="fixed top-0 left-0 h-screen w-[250px] bg-[#0F172A] flex flex-col z-50">
+      <div className="fixed top-0 left-0 h-screen w-[250px] bg-[#0F172A] flex flex-col z-40">
         <Link className="w-full h-[60px] bg-[#0F172A] text-[#60A5FA] border-b border-white/10 flex items-center justify-center font-bold text-lg tracking-wide shrink-0 hover:text-white transition" to="/admin">
           <MdOutlineSecurity className="mr-2" size={24} /> Security Grid
         </Link>
@@ -95,7 +105,6 @@ export default function Admin() {
             <MdSensors size={20} /> Employers  
           </Link>
           
-          {/* 🚨 Alerts Link: Blink red while unresolved */}
           <Link 
             className={`h-[46px] flex items-center gap-3 px-4 rounded-lg transition text-sm font-medium ${
               hasActiveAlerts 
@@ -114,10 +123,19 @@ export default function Admin() {
           <Link className="h-[46px] flex items-center gap-3 px-4 text-gray-300 hover:text-white hover:bg-blue-600 rounded-lg transition text-sm font-medium" to="/admin/reports">
             <IoDocumentText size={18} /> Reports & Analytics
           </Link>
-          <div className="mt-auto pt-4 border-t border-white/10">
+
+          <div className="mt-auto pt-4 border-t border-white/10 flex flex-col gap-1">
             <Link className="h-[46px] flex items-center gap-3 px-4 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition text-sm font-medium" to="/admin/settings">
               <IoSettingsSharp size={18} /> Settings
             </Link>
+            
+            {/* CHANGED: Now calls handleLogoutClick to open modal */}
+            <button 
+              onClick={handleLogoutClick} 
+              className="w-full h-[46px] flex items-center gap-3 px-4 text-red-400 hover:text-white hover:bg-red-600/80 rounded-lg transition text-sm font-medium outline-none"
+            >
+              <MdLogout size={18} /> Logout
+            </button>
           </div>
         </nav>
       </div>
@@ -134,6 +152,34 @@ export default function Admin() {
           <Route path="/settings" element={<AdminSettings />} />
         </Routes>
       </div>
+
+      {/* --- CHANGED: New Logout Confirmation Modal --- */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+          <div className="bg-[#111826] border border-slate-700 rounded-2xl w-full max-w-sm p-6 shadow-[0_0_40px_rgba(0,0,0,0.8)] relative">
+            <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+               <MdLogout className="text-red-500" /> Confirm Logout
+            </h2>
+            <p className="text-slate-400 text-sm mb-6">Are you sure you want to securely log out of the Security Grid dashboard?</p>
+            
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setShowLogoutConfirm(false)} 
+                className="px-5 py-2.5 rounded-lg text-sm font-bold text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 border border-slate-700 transition"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={executeLogout} 
+                className="px-5 py-2.5 rounded-lg text-sm font-bold bg-red-600 text-white hover:bg-red-500 transition shadow-[0_0_15px_rgba(220,38,38,0.3)]"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
