@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import axios from 'axios';
 
-import { MdDashboard, MdSensors, MdOutlineSecurity, MdLogout } from "react-icons/md";
+import { MdDashboard, MdSensors, MdOutlineSecurity, MdLogout, MdBuild } from "react-icons/md";
 import { FaMapMarkedAlt, FaUsers } from "react-icons/fa";
 import { IoAlertCircle, IoDocumentText, IoSettingsSharp } from "react-icons/io5";
 
@@ -14,6 +14,7 @@ import AdminAlertsEmergencies from './admin/adminAlertsEmergencies';
 import AdminSecurityPersonnel from './admin/adminSecurityPersonnel';
 import AdminReportsAnalytics from './admin/adminReportsAnalytics';
 import AdminSettings from './admin/adminSettings';
+import AdminSensorHealth from './admin/adminSensorHealth';
 
 const envUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api";
 const socketUrl = envUrl.replace(/\/api\/?$/, '');
@@ -116,10 +117,15 @@ export default function Admin() {
             <IoAlertCircle size={20} /> Alerts & Emergencies 
             {hasActiveAlerts && <span className="ml-auto w-2 h-2 rounded-full bg-white"></span>}
           </Link>
+
+          <Link className="h-[46px] flex items-center gap-3 px-4 text-gray-300 hover:text-white hover:bg-blue-600 rounded-lg transition text-sm font-medium" to="/admin/sensor-health">
+            <MdBuild size={18} /> Hardware Health
+          </Link>
           
           <Link className="h-[46px] flex items-center gap-3 px-4 text-gray-300 hover:text-white hover:bg-blue-600 rounded-lg transition text-sm font-medium" to="/admin/personnel">
             <FaUsers size={18} /> Security Personnel
           </Link>
+          
           <Link className="h-[46px] flex items-center gap-3 px-4 text-gray-300 hover:text-white hover:bg-blue-600 rounded-lg transition text-sm font-medium" to="/admin/reports">
             <IoDocumentText size={18} /> Reports & Analytics
           </Link>
@@ -148,6 +154,7 @@ export default function Admin() {
           <Route path="/employers" element={<AdminSensorsDevices />} />
           <Route path="/alerts" element={<AdminAlertsEmergencies />} />
           <Route path="/personnel" element={<AdminSecurityPersonnel />} />
+          <Route path="/sensor-health" element={<AdminSensorHealth />} />
           <Route path="/reports" element={<AdminReportsAnalytics />} />
           <Route path="/settings" element={<AdminSettings />} />
         </Routes>

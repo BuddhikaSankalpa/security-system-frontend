@@ -235,12 +235,29 @@ export default function AdminDashboard() {
                   const flowAlerts = activeAlerts.filter(alert => {
                     if (!alert?.location) return false;
                     const locUpper = alert.location.toUpperCase();
-                    return locUpper.includes(`FLOW 0${flowNum}`) || locUpper.includes(`FLOW ${flowNum}`) || locUpper.includes(`FLOW${flowNum}`);
+                    // UPDATED: Support both "FLOW 01" and "A1 - A101" mapping
+                    return locUpper.includes(`FLOW 0${flowNum}`) || 
+                           locUpper.includes(`FLOW ${flowNum}`) || 
+                           locUpper.includes(`FLOW${flowNum}`) ||
+                           locUpper.includes(`A${flowNum} -`) ||
+                           locUpper.startsWith(`A${flowNum}`);
                   });
 
                   const isCritical = flowAlerts.length > 0; 
                   
-                  const roomsInDanger = flowAlerts.map(a => a.location.includes('-') ? a.location.split('-')[1].trim() : a.location);
+                  // UPDATED: Map "A101" format back to readable "Room 01" for the visual badge
+                  const roomsInDanger = flowAlerts.map(a => {
+                    if (a.location.includes('-')) {
+                        const roomPart = a.location.split('-')[1].trim(); 
+                        const aFormatMatch = roomPart.match(/A\d+(0\d|\d\d)/i);
+                        if (aFormatMatch) {
+                            return `Room ${aFormatMatch[1]}`;
+                        }
+                        return roomPart;
+                    }
+                    return a.location;
+                  });
+
                   const uniqueRooms = [...new Set(roomsInDanger)].join(', ');
 
                   return (
@@ -461,10 +478,21 @@ export default function AdminDashboard() {
                 const isRoomCritical = activeAlerts.some(alert => {
                   const loc = (alert?.location || "").toUpperCase();
                   
-                  const isCorrectFlow = loc.includes(selectedFlow.toUpperCase()) || loc.includes(`FLOW ${parseInt(selectedFlow.replace(/\D/g, ''))}`);
-                  const isCorrectRoom = loc.includes(roomName.toUpperCase()) || loc.includes(roomNameSingle.toUpperCase());
+                  // Old Pattern Match ("Flow 01 - Room 01")
+                  const isCorrectFlowOld = loc.includes(selectedFlow.toUpperCase()) || loc.includes(`FLOW ${parseInt(selectedFlow.replace(/\D/g, ''))}`);
+                  const isCorrectRoomOld = loc.includes(roomName.toUpperCase()) || loc.includes(roomNameSingle.toUpperCase());
 
-                  return isCorrectFlow && isCorrectRoom;
+                  // New Pattern Match ("A1 - A101")
+                  const flowNumInt = parseInt(selectedFlow.replace(/\D/g, ''), 10);
+                  const paddedRoom = roomNum < 10 ? `0${roomNum}` : `${roomNum}`;
+                  const newFlowCode = `A${flowNumInt}`;
+                  const newRoomCode = `A${flowNumInt}${paddedRoom}`; // Creates strings like "A101"
+
+                  const isCorrectFlowNew = loc.includes(`${newFlowCode} -`) || loc.startsWith(newFlowCode);
+                  const isCorrectRoomNew = loc.includes(newRoomCode);
+
+                  // Trigger red highlight if either format matches
+                  return (isCorrectFlowOld && isCorrectRoomOld) || (isCorrectFlowNew && isCorrectRoomNew);
                 });
 
                 return (
@@ -484,4 +512,4 @@ export default function AdminDashboard() {
       )}
     </div>
   );
-} 
+}
