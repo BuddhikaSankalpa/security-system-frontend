@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios'; 
-import { toast } from 'react-hot-toast'; // Added for notifications
+import { toast } from 'react-hot-toast'; // Notifications
 import { IoSettingsSharp, IoSave } from "react-icons/io5";
-import { FaUserCog, FaBell, FaShieldAlt, FaUserShield, FaExclamationTriangle } from "react-icons/fa";
-import { MdOutlineSensors, MdContactPhone, MdLocalHospital } from "react-icons/md"; 
+// Added missing icons for the Emergency Directory (FaFireExtinguisher, FaUsers)
+import { FaUserCog, FaShieldAlt, FaUserShield, FaExclamationTriangle, FaFireExtinguisher, FaUsers } from "react-icons/fa";
+// Added missing icons for the Emergency Directory (MdOutlineLocationOn, MdSensors)
+import { MdOutlineSensors, MdContactPhone, MdLocalHospital, MdOutlineLocationOn, MdSensors } from "react-icons/md"; 
 
 export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState('profile'); 
   const [autoAlarm, setAutoAlarm] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [emailAlerts, setEmailAlerts] = useState(true);
   
   // Profile Data States
   const [adminId, setAdminId] = useState('');
@@ -27,6 +28,7 @@ export default function AdminSettings() {
 
   const envUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api";
 
+  // Fetch logged-in admin data on component mount
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
@@ -91,7 +93,7 @@ export default function AdminSettings() {
     setShowConfirmModal(true);
   };
 
-  // Execute the actual API update
+  // Execute the actual API update to save profile data
   const handleConfirmSave = async () => {
     try {
       const updatePayload = {
@@ -154,12 +156,15 @@ export default function AdminSettings() {
               >
                 <FaUserCog size={18} /> Admin Profile
               </button>
+              
+              {/* Renamed text and icon to reflect the new Emergency Directory content */}
               <button 
-                onClick={() => setActiveTab('notifications')}
-                className={`w-full flex items-center gap-3 px-5 py-4 text-sm font-bold transition-all duration-300 border-t border-slate-800/50 ${activeTab === 'notifications' ? 'bg-blue-500/10 text-blue-400 border-l-4 border-blue-500 shadow-[inset_15px_0_20px_-15px_rgba(59,130,246,0.3)]' : 'text-slate-400 hover:bg-[#161f33] border-l-4 border-transparent'}`}
+                onClick={() => setActiveTab('directory')}
+                className={`w-full flex items-center gap-3 px-5 py-4 text-sm font-bold transition-all duration-300 border-t border-slate-800/50 ${activeTab === 'directory' ? 'bg-blue-500/10 text-blue-400 border-l-4 border-blue-500 shadow-[inset_15px_0_20px_-15px_rgba(59,130,246,0.3)]' : 'text-slate-400 hover:bg-[#161f33] border-l-4 border-transparent'}`}
               >
-                <FaBell size={18} /> Notifications
+                <MdContactPhone size={18} /> Emergency Directory
               </button>
+
               <button 
                 onClick={() => setActiveTab('system')}
                 className={`w-full flex items-center gap-3 px-5 py-4 text-sm font-bold transition-all duration-300 border-t border-slate-800/50 ${activeTab === 'system' ? 'bg-blue-500/10 text-blue-400 border-l-4 border-blue-500 shadow-[inset_15px_0_20px_-15px_rgba(59,130,246,0.3)]' : 'text-slate-400 hover:bg-[#161f33] border-l-4 border-transparent'}`}
@@ -246,35 +251,70 @@ export default function AdminSettings() {
               </div>
             )}
 
-            {/* Notifications Tab */}
-            {activeTab === 'notifications' && (
+            {/* Emergency Directory Tab (Previously Notifications Tab) */}
+            {activeTab === 'directory' && (
               <div className="bg-[#111826] rounded-xl shadow-lg border border-slate-800 p-6 animate-[fadeIn_0.3s_ease-in-out]">
-                <h2 className="text-xl font-bold text-white mb-6 pb-4 border-b border-slate-800">Alert Preferences</h2>
+                <h2 className="text-xl font-bold text-white mb-6 pb-4 border-b border-slate-800 flex items-center gap-2">
+                  <MdContactPhone className="text-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]" /> Emergency Directory
+                </h2>
+                
                 <div className="space-y-4">
-                  {/* Email Alerts Toggle */}
-                  <div className="flex items-center justify-between p-5 bg-[#0d131f] rounded-xl border border-slate-800">
-                    <div>
-                      <h3 className="font-bold text-slate-200">Critical Email Alerts</h3>
-                      <p className="text-sm text-slate-500 mt-1">Receive immediate emails for 'Man Down' and 'Gas Leak' events.</p>
+                  
+                  {/* Police Rapid Response */}
+                  <div className="flex items-center justify-between p-4 bg-[#0d131f] rounded-xl border border-slate-800 transition hover:border-slate-600">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-slate-800/50 flex items-center justify-center text-slate-400">
+                        <FaUserShield size={18} />
+                      </div>
+                      <h3 className="font-bold text-slate-200">Police Rapid Response</h3>
                     </div>
-                    <div 
-                      onClick={() => setEmailAlerts(!emailAlerts)}
-                      className={`w-14 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${emailAlerts ? 'bg-blue-600 shadow-[0_0_10px_rgba(59,130,246,0.6)]' : 'bg-slate-700'}`}
-                    >
-                      <div className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ${emailAlerts ? 'translate-x-7' : 'translate-x-0'}`}></div>
-                    </div>
+                    <span className="px-4 py-1.5 bg-[#111826] text-blue-400 font-mono text-sm rounded-lg border border-slate-700">119</span>
                   </div>
 
-                  {/* SMS Alerts Toggle */}
-                  <div className="flex items-center justify-between p-5 bg-[#0d131f] rounded-xl border border-slate-800">
-                    <div>
-                      <h3 className="font-bold text-slate-200">SMS Notifications</h3>
-                      <p className="text-sm text-slate-500 mt-1">Send SMS to on-duty guards during an emergency.</p>
+                  {/* Fire Department */}
+                  <div className="flex items-center justify-between p-4 bg-[#0d131f] rounded-xl border border-slate-800 transition hover:border-slate-600">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-slate-800/50 flex items-center justify-center text-slate-400">
+                        <FaFireExtinguisher size={18} />
+                      </div>
+                      <h3 className="font-bold text-slate-200">Fire Department</h3>
                     </div>
-                    <div className="w-14 h-7 flex items-center rounded-full p-1 cursor-pointer bg-blue-600 shadow-[0_0_10px_rgba(59,130,246,0.6)]">
-                      <div className="bg-white w-5 h-5 rounded-full shadow-md transform translate-x-7"></div>
-                    </div>
+                    <span className="px-4 py-1.5 bg-[#111826] text-blue-400 font-mono text-sm rounded-lg border border-slate-700">110</span>
                   </div>
+
+                  {/* Suwaseriya Ambulance */}
+                  <div className="flex items-center justify-between p-4 bg-[#0d131f] rounded-xl border border-slate-800 transition hover:border-slate-600">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-slate-800/50 flex items-center justify-center text-slate-400">
+                        <MdOutlineLocationOn size={18} />
+                      </div>
+                      <h3 className="font-bold text-slate-200">Suwaseriya Ambulance</h3>
+                    </div>
+                    <span className="px-4 py-1.5 bg-[#111826] text-blue-400 font-mono text-sm rounded-lg border border-slate-700">1990</span>
+                  </div>
+
+                  {/* Chief Facility Manager */}
+                  <div className="flex items-center justify-between p-4 bg-[#0d131f] rounded-xl border border-slate-800 transition hover:border-slate-600">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-slate-800/50 flex items-center justify-center text-slate-400">
+                        <FaUsers size={18} />
+                      </div>
+                      <h3 className="font-bold text-slate-200">Chief Facility Manager</h3>
+                    </div>
+                    <span className="px-4 py-1.5 bg-[#111826] text-blue-400 font-mono text-sm rounded-lg border border-slate-700">+94 77 123 4567</span>
+                  </div>
+
+                  {/* IT System Admin */}
+                  <div className="flex items-center justify-between p-4 bg-[#0d131f] rounded-xl border border-slate-800 transition hover:border-slate-600">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-slate-800/50 flex items-center justify-center text-slate-400">
+                        <MdSensors size={18} />
+                      </div>
+                      <h3 className="font-bold text-slate-200">IT System Admin</h3>
+                    </div>
+                    <span className="px-4 py-1.5 bg-[#111826] text-blue-400 font-mono text-sm rounded-lg border border-slate-700">+94 71 987 6543</span>
+                  </div>
+
                 </div>
               </div>
             )}
