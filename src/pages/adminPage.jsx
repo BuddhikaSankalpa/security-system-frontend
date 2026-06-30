@@ -92,7 +92,7 @@ export default function Admin() {
       {/* ── Sidebar ── */}
       <div className="fixed top-0 left-0 h-screen w-[250px] bg-[#0F172A] flex flex-col z-40">
         <Link className="w-full h-[60px] bg-[#0F172A] text-[#60A5FA] border-b border-white/10 flex items-center justify-center font-bold text-lg tracking-wide shrink-0 hover:text-white transition" to="/admin">
-          <MdOutlineSecurity className="mr-2" size={24} /> Security Grid
+          <MdOutlineSecurity className="mr-2" size={24} /> NEX GUARD
         </Link>
         
         <nav className="flex flex-col p-4 gap-2 flex-1 overflow-y-auto mt-2">
@@ -107,7 +107,7 @@ export default function Admin() {
           </Link>
           
           <Link 
-            className={`h-[46px] flex items-center gap-3 px-4 rounded-lg transition text-sm font-medium ${
+            className={`h-[46px] flex items-center gap-3 px-4 rounded-lg transition text-sm font-medium ${  
               hasActiveAlerts 
               ? 'bg-red-600/80 text-white animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)] border border-red-500' 
               : 'text-gray-300 hover:text-white hover:bg-red-600'
@@ -167,7 +167,7 @@ export default function Admin() {
             <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                <MdLogout className="text-red-500" /> Confirm Logout
             </h2>
-            <p className="text-slate-400 text-sm mb-6">Are you sure you want to securely log out of the Security Grid dashboard?</p>
+            <p className="text-slate-400 text-sm mb-6">Are you sure you want to securely log out of the NEX GUARD dashboard?</p>
             
             <div className="flex justify-end gap-3">
               <button 

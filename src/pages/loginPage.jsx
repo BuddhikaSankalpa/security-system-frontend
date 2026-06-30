@@ -67,7 +67,7 @@ export default function LoginPage() {
           <div className="relative z-10">
             <div className="flex items-center gap-3 text-cyan-400 mb-8">
               <MdSecurity size={36} className="drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]" />
-              <span className="text-2xl font-black tracking-widest uppercase">Grid Core</span>
+              <span className="text-2xl font-black tracking-widest uppercase">NEX GUARD</span>
             </div>
             <h1 className="text-4xl font-black text-white leading-tight mb-4 tracking-wide">
               Industrial <br/> Security & <br/> Rapid Response.

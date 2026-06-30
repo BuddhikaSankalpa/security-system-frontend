@@ -64,7 +64,7 @@ export default function RegisterPage() {
           <div className="relative z-10">
             <div className="flex items-center gap-3 text-blue-400 mb-8">
                 <MdSecurity size={30} className="drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]" />
-                <span className="text-xl font-black tracking-widest uppercase">Grid Core</span>
+                <span className="text-xl font-black tracking-widest uppercase">NEX GUARD</span>
             </div>
           </div>
 
